@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACME CORP — Enterprise Knowledge Agent system</title>
+  <meta name="description" content="ACME CORP Agent Orchestrator with real-time pipeline trace visualizer, grounding checklists, and vector store indices manager.">
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-title-container">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-icon">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <div>
+        <h1 style="letter-spacing: 0.5px;">ACME CORP</h1>
+        <span class="header-sub">Enterprise Knowledge Orchestrator</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <!-- Groq API Key Input styled like search with magnifier -->
+      <div class="api-key-wrapper" style="padding: 6px 12px; display: flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="password" id="groq-key-input" class="api-key-input" placeholder="••••••••••••" aria-label="Groq API Key" style="border: none; width: 140px; font-size: 14px; background: transparent; color: var(--text-primary);">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="dashboard-grid">
+    
+    <!-- LEFT PANEL: Vector Database Store Panel on Left Side -->
+    <aside class="left-panel glass-panel">
+      <div class="panel-header">
+        <h2>Vector Database Store</h2>
+        <div class="db-tabs">
+          <button class="db-tab-btn active" data-db-tab="browse">Browse Docs</button>
+          <button class="db-tab-btn" data-db-tab="index">Index Document</button>
+        </div>
+      </div>
+      
+      <!-- Browse Tab -->
+      <div class="db-tab-content" id="db-tab-browse">
+        <div class="doc-list-container" id="doc-list">
+          <div class="loading-spinner">Loading indexed records...</div>
+        </div>
+      </div>
+      
+      <!-- Index Tab -->
+      <div class="db-tab-content" id="db-tab-index" style="display: none;">
+        <form id="index-doc-form" class="index-form">
+          <div class="form-group">
+            <label for="doc-title">Document Title:</label>
+            <input type="text" id="doc-title" required placeholder="e.g. Travel Reimbursement Directive">
+          </div>
+          <div class="form-group">
+            <label for="doc-content">Content (Markdown supported):</label>
+            <textarea id="doc-content" required rows="10" placeholder="# Travel Expense Policy..."></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="doc-dept">Department:</label>
+              <select id="doc-dept">
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Information Security">Information Security</option>
+                <option value="Procurement">Procurement</option>
+                <option value="Engineering">Engineering</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="doc-type">Document Type:</label>
+              <select id="doc-type">
+                <option value="Policy">Policy</option>
+                <option value="Directive">Directive</option>
+                <option value="Handbook">Handbook</option>
+                <option value="Report">Report</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="doc-author">Author Name:</label>
+            <input type="text" id="doc-author" value="Admin Office" required>
+          </div>
+          
+          <button type="submit" class="btn index-submit-btn">Index Document File</button>
+        </form>
+        <div id="index-status" class="index-status-msg"></div>
+      </div>
+    </aside>
+
+    <!-- RIGHT PANEL: Agentic Pipeline & Output Results -->
+    <div class="main-workspace">
+      
+      <!-- Control Panel -->
+      <section class="glass-panel control-panel">
+        <div class="query-section" style="display: flex; flex-direction: column; gap: 10px; align-items: stretch;">
+          <input type="text" id="query-input" class="query-input" placeholder="Ask a question, request a summary, or audit knowledge gaps..." style="width: 100%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+            <a href="#" id="filters-toggle-link" style="font-size: 11px; color: var(--color-retrieval); text-decoration: underline; font-weight: 500; cursor: pointer;">Constraints & Search Filters</a>
+            <button id="analyze-btn" class="btn run-btn" style="width: auto; padding: 8px 24px;">
+              <span>Analyze &rarr;</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Presets and toggles removed -->
+      </section>
+
+      <!-- Pipeline Visualization Canvas -->
+      <!-- Pipeline flow: NLU Classify → Retrieval → Synthesis → Validation → Gap Detector → Report Agent -->
+      <section class="glass-panel pipeline-panel">
+        <h3 class="section-title">Agentic Pipeline Coordination Flow</h3>
+        
+        <div class="pipeline-visualization" id="pipeline-visual">
+          <svg class="pipeline-svg" id="pipeline-svg">
+            <path id="path-nlu-retrieval" class="flow-line" d="" />
+            <path id="path-retrieval-synthesis" class="flow-line" d="" />
+            <path id="path-synthesis-validation" class="flow-line" d="" />
+            <path id="path-validation-gap" class="flow-line" d="" />
+            <path id="path-gap-report" class="flow-line" d="" />
+            <path id="path-validation-retry" class="flow-line retry-line" d="" />
+          </svg>
+
+          <!-- Node 1: NLU Intent Classification -->
+          <div class="pipe-node" id="node-nlu" data-agent="nlu" style="left: 5%; top: 50%; transform: translateY(-50%);">
+            <div class="node-icon">🔍</div>
+            <h4>NLU Classify</h4>
+            <span class="node-status" id="status-nlu">IDLE</span>
+          </div>
+
+          <!-- Node 2: Retrieval Agent -->
+          <div class="pipe-node" id="node-retrieval" data-agent="retrieval" style="left: 23%; top: 50%; transform: translateY(-50%);">
+            <div class="node-icon">☁️</div>
+            <h4>Retrieval</h4>
+            <span class="node-status" id="status-retrieval">IDLE</span>
+          </div>
+
+          <!-- Node 3: Synthesis Agent -->
+          <div class="pipe-node" id="node-synthesis" data-agent="synthesis" style="left: 41%; top: 50%; transform: translateY(-50%);">
+            <div class="node-icon">🧩</div>
+            <h4>Synthesis</h4>
+            <span class="node-status" id="status-synthesis">IDLE</span>
+          </div>
+
+          <!-- Node 4: Validation Agent -->
+          <div class="pipe-node" id="node-validation" data-agent="validation" style="left: 59%; top: 50%; transform: translateY(-50%);">
+            <div class="node-icon">🛡️</div>
+            <h4>Validation</h4>
+            <span class="node-status" id="status-validation">IDLE</span>
+          </div>
+
+          <!-- Node 5: Gap Detection Agent -->
+          <div class="pipe-node" id="node-gap" data-agent="gap" style="left: 77%; top: 50%; transform: translateY(-50%);">
+            <div class="node-icon">⚠️</div>
+            <h4>Gap Detector</h4>
+            <span class="node-status" id="status-gap">IDLE</span>
+          </div>
+
+          <!-- Node 6: Report Agent -->
+          <div class="pipe-node" id="node-report" data-agent="report" style="left: 95%; top: 50%; transform: translateY(-50%);">
+            <div class="node-icon">📄</div>
+            <h4>Report Agent</h4>
+            <span class="node-status" id="status-report">IDLE</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Meta Info Panel -->
+      <section class="meta-info-grid">
+        <div class="glass-panel info-card">
+          <h4>Intent Classified</h4>
+          <div class="meta-badge" id="info-intent">Awaiting Analysis...</div>
+        </div>
+        <div class="glass-panel info-card">
+          <h4>Key Entities</h4>
+          <div class="entities-container" id="info-entities">
+            <span class="empty-badge">None</span>
+          </div>
+        </div>
+        <div class="glass-panel info-card">
+          <h4>Active Filters</h4>
+          <div class="filters-container" id="info-filters">
+            <span class="empty-badge">None</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grounded Response Panel -->
+      <section class="glass-panel response-panel" id="response-panel" style="display: none;">
+        <div class="response-header">
+          <h3>Grounded Response</h3>
+          <div class="response-actions">
+            <span class="confidence-badge" id="conf-badge">Confidence: High</span>
+            <button id="copy-btn" class="key-btn copy-btn">Copy Response</button>
+          </div>
+        </div>
+        <div class="response-body markdown-content" id="response-body">
+          <!-- Rendered Output -->
+        </div>
+
+        <!-- Validation Grade Footer -->
+        <div class="val-summary-badge" id="val-summary">
+          <div class="val-icon-group">
+            <span class="val-shield" id="val-shield">🛡️</span>
+            <div>
+              <h4 id="val-title-status">Validation Status: Passed</h4>
+              <span id="val-notes">Checked against ACME Corp indexed files. No defects found.</span>
+            </div>
+          </div>
+          <div class="val-grade">
+            <span class="val-score-num" id="val-score">100</span>
+            <span class="val-score-label">Factual Score</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hallucination / Gaps Audits Section -->
+      <section class="glass-panel audit-panel" id="audit-panel" style="display: none;">
+        <h3 class="section-title">Hallucination &amp; Compliance Audit</h3>
+        <div id="audit-content">
+          <!-- Gaps list / Hallucinations warnings list -->
+        </div>
+      </section>
+
+      <!-- Execution Trace Console -->
+      <section class="glass-panel trace-panel">
+        <h3 class="section-title">Sub-Agent Execution Trace</h3>
+        <div class="trace-logs" id="trace-logs">
+          <div class="trace-log-row system">
+            <span class="trace-time">00:00:00</span>
+            <span class="trace-agent">Orchestrator</span>
+            <span class="trace-badge success">READY</span>
+            <span class="trace-message">Awaiting query submission. Please enter your Groq API Key and write a search query.</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="static/app.js"></script>
+</body>
+</html>
